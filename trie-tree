@@ -1,0 +1,109 @@
+#include <cstdio>
+#include <cstring>
+//儿子个数
+#define CHILD_NUM 26
+//结点个数：string length*string num
+#define MAX_NODE 500005
+using namespace std;
+
+struct Trie{
+    int fail[MAX_NODE];
+    int val[MAX_NODE];
+	bool vis[MAX_NODE];
+    int q[MAX_NODE];
+	//chd[u][i]表示的是沿着fail指针一直到找到存在的结点为止。
+    int chd[MAX_NODE][CHILD_NUM];
+    int ID[128];
+    int sz;
+
+    Trie(){
+        fail[0] = 0;
+        for (int i = 0; i < 26; i++)
+        ID[i+'a'] = i;
+    }
+
+    void reset(){
+        memset(chd[0], 0, sizeof(chd[0]));
+        memset(val, 0, sizeof(val));
+        sz = 1;
+    }
+
+    void insert(char *s, int _val){
+        int nid = 0, j;
+        for ( ; *s; s ++){
+            j = ID[*s];  //字符对应的ID
+            if(!chd[nid][j]){
+                memset(chd[sz], 0, sizeof(chd[sz]));
+                chd[nid][j] = sz++;
+            }
+            nid = chd[nid][j];
+        }
+		//根据题目要求来写
+        val[nid] += _val;
+    }
+
+    //得到fail指针
+    void bfs(){
+        int head, tail, v, i, u;
+        head = 0;
+        tail = -1;
+        for (i = 0; i < CHILD_NUM; i++){
+            v = chd[0][i];
+            if (!v) continue;
+            q[++tail] = v;
+            fail[v] = 0;
+        }
+        while(head <= tail){
+            u = q[head];
+            for (i = 0; i < CHILD_NUM; i++){
+                if (chd[u][i]){
+                    v = chd[u][i];
+                    q[++tail] = v;
+                    fail[v] = chd[fail[u]][i];
+					//以下一行代码要根据题目所给val的含义来写
+                    //val[v] |= val[fail[v]];
+                } else
+                chd[u][i] = chd[fail[u]][i];
+            }
+            ++head;
+        }
+    }
+
+    int  find(char *s){
+		memset(vis, 0, sizeof(vis));
+        int nid = 0, v, ret = 0, j;
+        for ( ; *s; s++){
+            j = ID[*s];
+            v = chd[nid][j];
+            int tmp = v;
+            while(tmp && !vis[tmp]){
+                ret += val[tmp];
+                vis[tmp] = true;
+                tmp = fail[tmp];
+            }
+            nid = v;
+        }
+        return ret;
+    }
+
+}trie;
+
+char s[1000005], str[1000005];
+
+int main(){
+    int tt;
+    scanf("%d",&tt);
+    while(tt--){
+        trie.reset();
+        int n, i;
+        scanf("%d",&n);
+        for (i = 1;i <= n; i++){
+            scanf("%s",s);
+            trie.insert(s,1);
+        }
+        trie.bfs();
+        scanf("%s",str);
+        printf("%d\n",trie.find(str));
+    }
+    return 0;
+}
